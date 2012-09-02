@@ -1,5 +1,7 @@
 package net.cloudapp.mcminecraftwest.bukkit.mcwater;
 
+import org.bukkit.plugin.java.JavaPlugin;
+
 /**
  * Created with IntelliJ IDEA.
  * User: Jason
@@ -7,5 +9,6 @@ package net.cloudapp.mcminecraftwest.bukkit.mcwater;
  * Time: 8:18 PM
  * To change this template use File | Settings | File Templates.
  */
-public class McWater {
+public class McWater extends JavaPlugin {
+
 }
