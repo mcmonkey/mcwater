@@ -10,5 +10,14 @@ import org.bukkit.plugin.java.JavaPlugin;
  * To change this template use File | Settings | File Templates.
  */
 public class McWater extends JavaPlugin {
+    @Override
+    public void onEnable() {
+        super.onEnable();
+    }
+
+    @Override
+    public void onDisable() {
+        super.onDisable();
+    }
 
 }
