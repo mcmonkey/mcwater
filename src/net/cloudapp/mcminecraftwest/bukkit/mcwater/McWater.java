@@ -1,5 +1,7 @@
 package net.cloudapp.mcminecraftwest.bukkit.mcwater;
 
+import org.bukkit.block.Biome;
+import org.bukkit.block.Block;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -20,25 +22,23 @@ import java.util.Vector;
  * Time: 8:18 PM
  * To change this template use File | Settings | File Templates.
  */
-public class McWater extends JavaPlugin implements Listener {
+public class McWater extends JavaPlugin {
+
 
 	public McWater() {
 	}
+
     @Override
     public void onEnable() {
         getLogger().info("McWater enabled");
 
 		PluginManager manager = getServer().getPluginManager();
-		manager.registerEvents(this, this);
+		manager.registerEvents(new WaterFlowListener(this), this);
 
     }
 
-	@EventHandler
-	public void onBlockFromTo(BlockFromToEvent event) {
-		event.setCancelled(true);
-	}
 
-    @Override
+	@Override
     public void onDisable() {
 		getLogger().info("McWater disabled");
     }
