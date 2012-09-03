@@ -2,6 +2,7 @@ package net.cloudapp.mcminecraftwest.bukkit.mcwater;
 
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -72,29 +73,60 @@ public class WaterFlowListener implements Listener {
 
 		if(isWater()) {
 			if(blockProvidesWater()) {
-				if(toAcceptsWater()) {
-
-				} else if(findValidAdjacentBlock()) {
-
+				if(toAcceptsWater() || findValidAdjacentBlock()) {
+					subtractWaterFrom();
+					addWaterTo();
+				} else {
+					m_plugin.getLogger().info("Water provider can't add to id: " + toId);
 				}
-			} else {
-				cancel();
 			}
+			cancel();
 		}
 
 	}
 
+	private void addWaterTo() {
+		if(toId == AIR_ID) {
+			toLevel = LIQUID_FALLING_FLAG;
+		}
+
+		toLevel--;
+		if(toLevel == 0x0) {
+			to.setTypeId(WATER_STATIC_ID);
+		} else {
+			to.setTypeId(WATER_FLOWING_ID);
+			setFlowLevel(to, toMeta, toLevel);
+		}
+	}
+
+	private void subtractWaterFrom() {
+		int cost = waterCost();
+
+		if(cost != 0) {
+			bLevel += cost;
+			if(bLevel == LIQUID_FALLING_FLAG) {
+				// We're empty!
+				block.setTypeId(AIR_ID);
+			} else {
+				block.setTypeId(WATER_FLOWING_ID);
+				setFlowLevel(block, bMeta, bLevel);
+			}
+		}
+	}
+
+	private byte waterCost() {
+		if(block.getBiome() == Biome.OCEAN)
+			return 0;
+		return 1;
+	}
+
 	public Vector[] getDirections() {
 		if(m_directions == null) {
-			m_directions = new Vector[8];
+			m_directions = new Vector[4];
 			m_directions[0] = new Vector( 1, 0,  0);
-			m_directions[1] = new Vector( 0, 0, -1);
-			m_directions[2] = new Vector(-1, 0,  0);
-			m_directions[3] = new Vector(-1, 0,  0);
-			m_directions[4] = new Vector( 0, 0,  1);
-			m_directions[5] = new Vector( 0, 0,  1);
-			m_directions[6] = new Vector( 1, 0,  0);
-			m_directions[7] = new Vector( 1, 0,  0);
+			m_directions[1] = new Vector(-1, 0, -1);
+			m_directions[2] = new Vector(-1, 0,  1);
+			m_directions[3] = new Vector( 1, 0,  1);
 		}
 		return m_directions;
 	}
@@ -107,8 +139,12 @@ public class WaterFlowListener implements Listener {
 		toLevel = (byte)(toMeta & LIQUID_LEVEL_MASK);
 	}
 
-	private byte flowLevel(Block b) {
+	private byte getFlowLevel(Block b) {
 		return (byte)(b.getData() & LIQUID_LEVEL_MASK);
+	}
+
+	private void setFlowLevel(Block b, byte data, byte level) {
+		b.setData( (byte)((data & N_LIQUID_LEVEL_MASK) | level));
 	}
 
 	private boolean findValidAdjacentBlock() {
@@ -130,7 +166,7 @@ public class WaterFlowListener implements Listener {
 			if(id == AIR_ID) {
 				currentRating = maxRating;
 			} else if(id == WATER_FLOWING_ID) {
-				currentRating = flowLevel(current);
+				currentRating = getFlowLevel(current);
 			}
 
 			if(currentRating > bestRating) {
@@ -149,11 +185,11 @@ public class WaterFlowListener implements Listener {
 	private boolean toAcceptsWater() {
 		if(toId == WATER_STATIC_ID) {
 			return false;
-		} else if(toId == WATER_FLOWING_ID) {
-			return toLevel != LIQUID_FALLING_FLAG;
+		} else if(toId == AIR_ID) {
+			return true;
 		}
-		// Assume the event would not be firing if we were hitting an otherwise valid block.
-		return true;
+		// For now we won't deal with water hitting anything but air.
+		return false;
 	}
 
 	private void cancel(boolean physics) {
@@ -175,7 +211,9 @@ public class WaterFlowListener implements Listener {
 		if(bId == WATER_STATIC_ID) {
 			return true;
 		} else if(bId == WATER_FLOWING_ID) {
-			// Don't provide water from almost empty blocks.
+			// Don't provide water from almost empty blocks unless they are falling.
+			if(bFalling)
+				return true;
 			return bLevel != LIQUID_LEVEL_MASK;
 		}
 		return false;
