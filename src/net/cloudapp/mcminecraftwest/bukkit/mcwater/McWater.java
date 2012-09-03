@@ -27,7 +27,7 @@ public class McWater extends JavaPlugin implements Listener {
     @Override
     public void onEnable() {
         getLogger().info("McWater enabled");
-		super.getServer().getWorld("world");
+
 		PluginManager manager = getServer().getPluginManager();
 		manager.registerEvents(this, this);
 
@@ -35,7 +35,7 @@ public class McWater extends JavaPlugin implements Listener {
 
 	@EventHandler
 	public void onBlockFromTo(BlockFromToEvent event) {
-
+		event.setCancelled(true);
 	}
 
     @Override
